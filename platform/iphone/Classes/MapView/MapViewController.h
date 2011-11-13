@@ -65,6 +65,11 @@
 + (BOOL)isStarted;
 + (double)centerLatitude;
 + (double)centerLongitude;
+// BEGIN CALLBACK AUXS BY PABLO GUZMAN
++ (double)centerLatitude2;
++ (double)centerLongitude2;
++ (void)addAnotations:(rho_param*)p;
+// END CALLBACK AUXS BY PABLO GUZMAN
 
 - (void)setParams:(rho_param*)params;
 - (void)close;

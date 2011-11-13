@@ -28,6 +28,7 @@
 
 #include "rhodes/JNIRhoRuby.h"
 
+#include <common/RhodesApp.h>
 #include <common/rhoparams.h>
 #include <common/map/MapEngine.h>
 
@@ -603,6 +604,17 @@ static rhomap::IMapView *mapview(JNIEnv *env, jlong nativeDevice)
     return mv;
 }
 
+//JIMMY
+RHO_GLOBAL void JNICALL Java_com_rhomobile_rhodes_mapview_GoogleMapView_onCallback
+(JNIEnv *env, jclass, jstring callback_url, jstring body)
+{
+    rho_net_request_with_data(
+							  RHODESAPP().canonicalizeRhoUrl(rho_cast<std::string>(env, callback_url)).c_str(),
+							  rho_cast<std::string>(env, body).c_str());
+}
+//ENDJIMMY
+
+
 RHO_GLOBAL void JNICALL Java_com_rhomobile_rhodes_mapview_MapView_setSize
   (JNIEnv *env, jobject, jobject jDevice, jlong nativeDevice, jint width, jint height)
 {
@@ -857,6 +869,33 @@ RHO_GLOBAL double google_mapview_state_center_lon()
     return 0;
 #endif
 }
+
+// JIMMY
+RHO_GLOBAL void google_mapview_add_annotations(rho_param *p)
+{
+#ifdef RHO_GOOGLE_API_KEY
+	JNIEnv *env = jnienv();
+	jclass& clsMapView = getJNIClass(RHODES_JAVA_CLASS_GOOGLEMAPVIEW);
+	if (!clsMapView) return;
+	jmethodID midCreate = getJNIClassStaticMethod(env, clsMapView, "addAnnotations", "(Ljava/util/Map;)V");
+	if (!midCreate) return;
+	
+	if (p->type != RHO_PARAM_HASH) {
+		RAWLOG_ERROR("create: wrong input parameter (expect Hash)");
+		return;
+	}
+	
+	jhobject paramsObj = jhobject(RhoValueConverter(env).createObject(p));
+	//jhstring keyObj = rho_cast<jhstring>(RHO_GOOGLE_API_KEY);
+	env->CallStaticVoidMethod(clsMapView, midCreate, paramsObj.get());
+#else
+	RAWLOG_ERROR("MapView disabled at build time");
+#endif
+}
+// END JIMMY
+
+
+
 //#endif
 
 

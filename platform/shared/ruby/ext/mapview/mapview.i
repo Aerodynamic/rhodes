@@ -16,6 +16,10 @@ extern void mapview_set_file_caching_enable(int enable);
 #define set_file_caching_enable mapview_set_file_caching_enable
 extern int mapview_preload_map_tiles(rho_param* p, const char* callback);
 #define preload_map_tiles mapview_preload_map_tiles
+/* BEGIN CALLBACK AUXS BY PABLO GUZMAN */
+extern void add_anotations(rho_param *p);
+#define add_anotations mapview_add_anotations
+/* END CALLBACK AUXS BY PABLO GUZMAN */
 %}
 
 %typemap(in) (rho_param *p) {
@@ -33,4 +37,6 @@ extern double state_center_lat();
 extern double state_center_lon();
 extern void set_file_caching_enable(int enable);
 extern int preload_map_tiles(rho_param* p, const char* callback);
-
+/* BEGIN CALLBACK AUXS BY PABLO GUZMAN */
+extern void add_anotations(rho_param *p);
+/* END CALLBACK AUXS BY PABLO GUZMAN */

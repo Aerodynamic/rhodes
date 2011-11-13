@@ -1830,6 +1830,10 @@ extern void mapview_set_file_caching_enable(int enable);
 #define set_file_caching_enable mapview_set_file_caching_enable
 extern int mapview_preload_map_tiles(rho_param* p, const char* callback);
 #define preload_map_tiles mapview_preload_map_tiles
+/* BEGIN CALLBACK AUXS BY PABLO GUZMAN */
+extern void mapview_add_anotations(rho_param *p);
+#define add_anotations mapview_add_anotations
+/* END CALLBACK AUXS BY PABLO GUZMAN */
 
 
   #define SWIG_From_double   rb_float_new 
@@ -1981,7 +1985,30 @@ fail:
   }
   return Qnil;
 }
+/* BEGIN CALLBACK AUXS BY PABLO GUZMAN */
 
+SWIGINTERN VALUE
+_wrap_add_anotations(int argc, VALUE *argv, VALUE self) {
+	rho_param *arg1 = (rho_param *) 0 ;
+	
+	if ((argc < 1) || (argc > 1)) {
+		rb_raise(rb_eArgError, "wrong # of arguments(%d for 1)",argc); SWIG_fail;
+	}
+	{
+		arg1 = rho_param_fromvalue(argv[0]);
+	}
+	add_anotations(arg1);
+	{
+		rho_param_free(arg1);
+	}
+	return Qnil;
+fail:
+	{
+		rho_param_free(arg1);
+	}
+	return Qnil;
+}
+/* END CALLBACK AUXS BY PABLO GUZMAN */
 
 SWIGINTERN VALUE
 _wrap_close(int argc, VALUE *argv, VALUE self) {
@@ -2385,5 +2412,8 @@ SWIGEXPORT void Init_MapView(void) {
   rb_define_module_function(mMapView, "state_center_lon", _wrap_state_center_lon, -1);
   rb_define_module_function(mMapView, "set_file_caching_enable", _wrap_set_file_caching_enable, -1);
   rb_define_module_function(mMapView, "preload_map_tiles", _wrap_preload_map_tiles, -1);
+    /* BEGIN CALLBACK AUXS BY PABLO GUZMAN */
+	rb_define_module_function(mMapView, "add_anotations", _wrap_add_anotations, -1);
+	/* END CALLBACK AUXS BY PABLO GUZMAN */
 }
 

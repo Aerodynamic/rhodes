@@ -30,6 +30,7 @@
 #import "MapViewController.h"
 #import "Rhodes.h"
 #import "RhoMainView.h"
+#import "WildcardGestureRecognizer.h"
 
 #include "logging/RhoLog.h"
 #include "ruby/ext/rho/rhoruby.h"
@@ -386,7 +387,11 @@ static MapViewController *mc = nil;
     mapView.autoresizesSubviews = YES;
     mapView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 	
-	
+    // BEGIN CALLBACK AUXS BY PABLO GUZMAN
+	WildcardGestureRecognizer * tapInterceptor = [[WildcardGestureRecognizer alloc] init];
+	[mapView addGestureRecognizer:tapInterceptor];
+	[tapInterceptor setMapView:self];
+	// END CALLBACK AUXS BY PABLO GUZMAN
 	
     
     /*Geocoder Stuff*/
@@ -548,6 +553,145 @@ static MapViewController *mc = nil;
 + (double)centerLongitude {
 	return [MapViewController center].longitude;
 }
+
+// BEGIN CALLBACK AUXS BY PABLO GUZMAN
++ (CLLocationCoordinate2D)center2 {
+    CLLocationCoordinate2D centre;
+    if (mc) {
+		MKMapView* theMap = mc->mapView;
+		centre = [theMap convertPoint:theMap.center toCoordinateFromView:theMap];
+    }
+    else {
+        centre.latitude = 0;
+        centre.longitude = 0;
+    }
+	
+    return centre;
+}
+
+
++ (double)centerLatitude2 {
+	return [MapViewController center2].latitude;
+}
+
++ (double)centerLongitude2 {
+	return [MapViewController center2].longitude;
+}
++ (void) addAnotations:(rho_param *)p {
+	RAWLOG_INFO("SEGUNDO METODO DE CONTROL!");
+	if (mc) {
+        if (p && p->type == RHO_PARAM_HASH) {
+			//aca paso mi callback
+			rho_param *st = NULL;
+			rho_param *ann = NULL;
+			for (int i = 0, lim = p->v.hash->size; i < lim; ++i) {
+				char *name = p->v.hash->name[i];
+				rho_param *value = p->v.hash->value[i];
+				if (strcasecmp(name, "settings") == 0)
+					st = value;
+				else if (strcasecmp(name, "annotations") == 0)
+					ann = value;
+			}
+			RAWLOG_INFO("LLAMANDO A SET ANOTATIONS!");
+			[mc setAnnotations2:ann];
+		}
+		rho_param_free(p);
+    }	
+    
+}
+- (void)setAnnotations2:(rho_param*)p {
+	RAWLOG_INFO("SETANOTATIONS LLAMADO");
+    int size = 1;
+    if (p && p->type == RHO_PARAM_ARRAY)
+        size += p->v.array->size;
+    NSMutableArray *annotations = [NSMutableArray arrayWithCapacity:size];
+    if (region_center) {
+        MapAnnotation *annObj = [[MapAnnotation alloc] init];
+        annObj.type = @"center";
+        annObj.address = region_center;
+        CLLocationCoordinate2D c;
+        c.latitude = c.longitude = 10000;
+        annObj.coordinate = c;
+        [annotations addObject:annObj];
+        [annObj release];
+    }
+    if (p && p->type == RHO_PARAM_ARRAY) {
+        for (int i = 0, lim = p->v.array->size; i < lim; ++i) {
+            rho_param *ann = p->v.array->value[i];
+            if (ann->type != RHO_PARAM_HASH)
+                continue;
+            
+            CLLocationCoordinate2D coord;
+            coord.latitude = 10000;
+            coord.longitude = 10000;
+            
+            NSString *address = nil;
+            NSString *title = nil;
+            NSString *subtitle = nil;
+            NSString *url = nil;
+            
+            NSString *image = nil;
+            int image_x_offset = 0;
+            int image_y_offset = 0;
+            
+            for (int j = 0, limm = ann->v.hash->size; j < limm; ++j) {
+                char *name = ann->v.hash->name[j];
+                rho_param *value = ann->v.hash->value[j];
+                if (!name || !value)
+                    continue;
+                if (value->type != RHO_PARAM_STRING)
+                    continue;
+                char *v = value->v.string;
+                
+                if (strcasecmp(name, "latitude") == 0) {
+                    coord.latitude = strtod(v, NULL);
+                }
+                else if (strcasecmp(name, "longitude") == 0) {
+                    coord.longitude = strtod(v, NULL);
+                }
+                else if (strcasecmp(name, "street_address") == 0) {
+                    address = [NSString stringWithUTF8String:v];
+                }
+                else if (strcasecmp(name, "title") == 0) {
+                    title = [NSString stringWithUTF8String:v];
+                }
+                else if (strcasecmp(name, "subtitle") == 0) {
+                    subtitle = [NSString stringWithUTF8String:v];
+                }
+                else if (strcasecmp(name, "url") == 0) {
+                    url = [NSString stringWithUTF8String:v];
+                }
+                else if (strcasecmp(name, "image") == 0) {
+                    image = [NSString stringWithUTF8String:v];
+                }
+                else if (strcasecmp(name, "image_x_offset") == 0) {
+                    image_x_offset = (int)strtod(v, NULL);
+                }
+                else if (strcasecmp(name, "image_y_offset") == 0) {
+                    image_y_offset = (int)strtod(v, NULL);
+                }
+            }
+            RAWLOG_INFO("TRATANDO DE AGREGAR PUNTO");
+            MapAnnotation *annObj = [[MapAnnotation alloc] init];
+            [annObj setCoordinate:coord];
+            if (address) [annObj setAddress:address];
+            if (title) [annObj setTitle:title];
+            if (subtitle) [annObj setSubtitle:subtitle];
+            if (url) [annObj setUrl:url];
+            if (image) [annObj setImage:image];
+            [annObj setImage_x_offset:image_x_offset];
+            [annObj setImage_y_offset:image_y_offset];
+			if(mc) 
+				[mc->mapView addAnnotation:annObj];
+            [annotations addObject:annObj];
+            [annObj release];
+        }
+    }
+    ggeoCoder = [[GoogleGeocoder alloc] initWithAnnotations:annotations apikey:gapikey];
+    ggeoCoder.actionTarget = self;
+    ggeoCoder.onDidFindAddress = @selector(didFindAddress:);
+}
+// END CALLBACK AUX BY PABLO GUZMAN
 
 
 @end

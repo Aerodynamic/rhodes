@@ -45,7 +45,9 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.view.Display;
 import android.view.ViewGroup.LayoutParams;
+import android.view.MotionEvent;
 import android.widget.RelativeLayout;
+import android.util.Log;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
@@ -169,7 +171,8 @@ public class GoogleMapView extends MapActivity {
 		ExtrasHolder extras = mHolder;
 		
 		apiKey = extras.getString(SETTINGS_PREFIX + "api_key");
-		
+		String callback = extras.getString(CALLBACKS_PREFIX + "on_touch_up");
+
 		// Extract settings
 		String map_type = extras.getString(SETTINGS_PREFIX + "map_type");
 		if (map_type == null)
@@ -221,7 +224,7 @@ public class GoogleMapView extends MapActivity {
 		}
 		
 		// Create view
-		view = new com.google.android.maps.MapView(this, apiKey);
+		view = new TheMap(this, apiKey, callback);
 		view.setClickable(true);
 		layout.addView(view);
 		
@@ -606,4 +609,220 @@ public class GoogleMapView extends MapActivity {
 			return 0;
 		}
 	}
+	//JIMMY
+	//JIMMY
+	public static void addAnnotations(Map<String, Object> params) {
+		Log.d(TAG,"LOGRE LLAMAR A ADDANOTATIONS EN JAVA");
+		Vector<Annotation> theAnnotations = null;
+		//mHolder = new ExtrasHolder();
+		if(params == null) Log.e(TAG,"PARAMS LLEGO NULO!");
+		Object annotations2 = (Object)params.get("annotations");
+		if (annotations2 != null && (annotations2 instanceof Vector<?>)) {
+			Vector<Object> arr = (Vector<Object>)annotations2;
+			
+			theAnnotations = new Vector<Annotation>(arr.size());
+			//intent.putExtra(ANNOTATIONS_PREFIX + "size", arr.size());
+			
+			for (int i = 0, lim = arr.size(); i < lim; ++i) {
+				Annotation ann = new Annotation();
+				
+				ann.latitude = 10000;
+				ann.longitude = 10000;
+				
+				
+				Object annObj = arr.elementAt(i);
+				if (annObj == null || !(annObj instanceof Map<?, ?>))
+					continue;
+				
+				Map<Object, Object> annMap = (Map<Object, Object>)annObj;
+				
+				String prefix = ANNOTATIONS_PREFIX + Integer.toString(i) + ".";
+				
+				Object latitude = annMap.get("latitude");
+				//if (latitude != null && (latitude instanceof String))
+					//intent.putExtra(prefix + "latitude", (String)latitude);
+				
+				Object longitude = annMap.get("longitude");
+				//if (longitude != null && (longitude instanceof String))
+					//intent.putExtra(prefix + "longitude", (String)longitude);
+				String lat = (String)latitude;
+				if (lat != null) {
+					try {
+						ann.latitude = Double.parseDouble(lat);
+					}
+					catch (NumberFormatException e) {}
+				}
+				
+				String lon = (String)longitude;
+				if (lon != null) {
+					try {
+						ann.longitude = Double.parseDouble(lon);
+					}
+					catch (NumberFormatException e) {}
+				}
+				ann.type = "ann";
+					
+					
+					
+				Object address = annMap.get("street_address");
+				//if (address != null && (address instanceof String))
+					//intent.putExtra(prefix + "address", (String)address);
+				
+				Object title = annMap.get("title");
+				//if (title != null && (title instanceof String))
+					//intent.putExtra(prefix + "title", (String)title);
+				
+				Object subtitle = annMap.get("subtitle");
+				//if (subtitle != null && (subtitle instanceof String))
+					//intent.putExtra(prefix + "subtitle", (String)subtitle);
+				
+				Object url = annMap.get("url");
+				//if (url != null && (url instanceof String))
+					//intent.putExtra(prefix + "url", (String)url);
+				
+				Object image = annMap.get("image");
+				//if (image != null && (image instanceof String))
+					//intent.putExtra(prefix + "image", (String)image);
+				
+				Object image_x_offset = annMap.get("image_x_offset");
+				//if (image_x_offset != null && (image_x_offset instanceof String))
+					//intent.putExtra(prefix + "image_x_offset", (String)image_x_offset);
+				
+				Object image_y_offset = annMap.get("image_y_offset");
+				//if (image_y_offset != null && (image_y_offset instanceof String))
+					//intent.putExtra(prefix + "image_y_offset", (String)image_y_offset);
+					
+				ann.address = (String)address;
+				ann.title = (String)title;
+				ann.subtitle = (String)subtitle;
+				ann.url = (String)url;
+				if (ann.url != null)
+					ann.url = RhodesService.getInstance().normalizeUrl(ann.url);
+				
+				ann.image = (String)image;
+				if(image_x_offset != null)
+				ann.image_x_offset = Integer.parseInt((String)image_x_offset);
+				if(image_y_offset != null)
+				ann.image_y_offset = Integer.parseInt((String)image_y_offset);
+				Log.d(TAG,"Agregando anotacion: "+ann.latitude+","+ann.longitude);
+
+				
+				theAnnotations.addElement(ann);
+				
+					
+					
+					
+			}
+		}
+		Log.d(TAG,"Tratando de llamar RuntimeGeocoding");
+		if(mc!=null) mc.doRuntimeGeocoding(theAnnotations);
+		
+		
+	}
+	
+	public void doRuntimeGeocoding(Vector<Annotation> newAnnotations) {
+		Vector<Annotation> anns = new Vector<Annotation>();
+		
+		Context context = RhodesActivity.getContext();
+		
+		for (int i = 0, lim = newAnnotations.size(); i < lim; ++i) {
+			Log.d(TAG,"Agregando anotacion...");
+			Annotation ann = newAnnotations.elementAt(i);
+			if (ann.latitude == 10000 || ann.longitude == 10000)
+				continue;
+			anns.addElement(ann);
+		}
+		
+		for (int i = 0, lim = newAnnotations.size(); i < lim; ++i) {
+			Annotation ann = newAnnotations.elementAt(i);
+			if (ann.latitude != 10000 && ann.longitude != 10000)
+				continue;
+			if (ann.address == null)
+				continue;
+			
+			Geocoder gc = new Geocoder(context);
+			try {
+				List<Address> addrs = gc.getFromLocationName(ann.address, 1);
+				if (addrs.size() == 0)
+					continue;
+				
+				Address addr = addrs.get(0);
+				
+				ann.latitude = addr.getLatitude();
+				ann.longitude = addr.getLongitude();
+	
+				if (ann.type.equals("center")) {
+					MapController controller = view.getController();
+					center.latitude = ann.latitude;
+					center.longitude = ann.longitude;
+					controller.setCenter(new GeoPoint((int)(ann.latitude*1000000), (int)(ann.longitude*1000000)));
+					controller.zoomToSpan((int)(spanLat*1000000), (int)(spanLon*1000000));
+					PerformOnUiThread.exec(new Runnable() {
+						public void run() {
+							view.invalidate();
+						}
+					}, false);
+				}
+				else
+					anns.addElement(ann);
+			} catch (IOException e) {
+				Logger.E(TAG, "GeoCoding request failed: " + e.getMessage());
+			}
+			
+		}
+		Log.d(TAG,"Voy a tirar a dibujar la cosa");
+		//annOverlay.addAnnotations(anns);
+				addAnnotationsInUIThread(annOverlay, anns, view);
+		
+		PerformOnUiThread.exec(new Runnable() {
+			public void run() {
+				view.invalidate();
+			}
+		}, false);
+		Log.d(TAG,"Se dibuji?");
+
+	}
+	
+	public class TheMap extends com.google.android.maps.MapView {
+		
+		private String dragCallbackURL;
+		
+		public TheMap(android.content.Context context, java.lang.String apiKey, String callback) {
+			super(context, apiKey);
+			dragCallbackURL = callback;
+		}
+		@Override
+		public boolean onTouchEvent(MotionEvent event) 
+		{   
+			super.onTouchEvent(event);
+			//---when user lifts his finger---
+			if (event.getAction() == 1) {
+				//aca gatillo el callback
+				//Log.d(TAG, "----- TOUCH AT: "+center.latitude+","+center.longitude);
+				GeoPoint cord = view.getMapCenter();
+				fireDragCallback(dragCallbackURL, (double)cord.getLatitudeE6()/1000000.0, (double)cord.getLongitudeE6()/1000000.0);
+				
+			}
+			return true;
+			
+			
+		} 
+		private void fireDragCallback(String callbackURL, double latitude, double longitude) {
+			String body = "&longitude=";
+			body += longitude;
+			body += "&latitude=";
+			body += latitude;
+			if (callbackURL != null) {
+				Log.d(TAG,"fire Drag Callback");
+				GoogleMapView.onCallback(callbackURL, body);
+			}
+			else {
+				Log.e(TAG,"fire Drag Callback ERROR - Callback not defined");
+			}
+		}
+	}
+
+	// to native
+	public static native void onCallback(String callback_url, String body);
+
 }

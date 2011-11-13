@@ -29,6 +29,7 @@
 //#import "MapViewControllerESRI.h"
 #import "Rhodes.h"
 #import "RhoMainView.h"
+#import "WildcardGestureRecognizer.h"
 
 #include "logging/RhoLog.h"
 #include "ruby/ext/rho/rhoruby.h"
@@ -90,6 +91,11 @@ static NSMutableDictionary* map_providers = nil;
 - (double)centerLongitude {
 	return [MapViewController centerLongitude];
 }
+// BEGIN CALLBACK AUXS BY PABLO GUZMAN
+- (void)addAnotations:(rho_param *)params {
+	[MapViewController addAnotations:params];
+}
+// END CALLBACK AUXS BY PABLO GUZMAN
 
 @end
 
@@ -106,6 +112,41 @@ void mapview_create(rho_param *p) {
     if (!rho_rhodesapp_check_mode())
         return;
 #ifdef __IPHONE_3_0
+    
+    
+    if (p && p->type == RHO_PARAM_HASH) {
+		rho_param *calls = NULL;
+        for (int i = 0, lim = p->v.hash->size; i < lim; ++i) {
+            char *name = p->v.hash->name[i];
+            rho_param *value = p->v.hash->value[i];
+            
+			if (strcasecmp(name, "callbacks") == 0)
+                calls = value;
+        }
+        
+		
+		if (!calls || calls->type != RHO_PARAM_HASH)
+			return;
+		
+		for (int i = 0, lim = calls->v.hash->size; i < lim; ++i) {
+			char *name = calls->v.hash->name[i];
+			rho_param *value = calls->v.hash->value[i];
+			if (!name || !value)
+				continue;
+			
+			if (strcasecmp(name, "on_touch_up") == 0) {
+				if (value->type != RHO_PARAM_STRING)
+					continue;
+				char *the_callback = value->v.string;
+				[WildcardGestureRecognizer setCallback:the_callback];
+			}
+			
+		}
+		
+		
+    }
+    
+    
 	if (map_providers == nil) {
 		[RhoMapViewProvidersManager registerMapViewProvider:@"Google" provider:[[MapEngine_Google alloc] init]];
 	}
@@ -192,7 +233,16 @@ double mapview_state_center_lon() {
 }
 
 void mapview_set_file_caching_enable(int enable) {
+    
 }
+// BEGIN CALLBACK AUXS BY PABLO GUZMAN
+void mapview_add_anotations(rho_param *p) {
+#ifdef __IPHONE_3_0
+	if (engine_p != nil) {
+		return [engine_p addAnotations:rho_param_dup(p)];
+	}
+#else
+#endif
 
 /*
 int mapview_preload_map_tiles(const char* engine, const char* map_type, double top_latitude, double left_longitude, double bottom_latitude, double right_longitude, int min_zoom, int max_zoom, const char* callback) {

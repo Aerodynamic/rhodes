@@ -37,6 +37,9 @@
 - (BOOL)isStarted;
 - (double)centerLatitude;
 - (double)centerLongitude;
+// BEGIN CALLBACK AUXS BY PABLO GUZMAN
+- (void)addAnotations:(rho_param*)params;
+// END CALLBACK AUXS BY PABLO GUZMAN
 
 @end
 
