@@ -968,6 +968,14 @@ RHO_GLOBAL void mapview_create(rho_param *p)
     }
 }
 
+//JIMMY
+RHO_GLOBAL void mapview_add_anotations(rho_param *p)
+{
+	google_mapview_add_annotations(p);
+}
+//ENDJIMMY
+
+
 RHO_GLOBAL VALUE mapview_state_started()
 {
     if (ourIsOldGoogleEngineUsed) {

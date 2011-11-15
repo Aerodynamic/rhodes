@@ -67,7 +67,9 @@ public class GoogleMapView extends MapActivity {
 	
 	private static final String SETTINGS_PREFIX = RhodesService.INTENT_EXTRA_PREFIX + "settings.";
 	private static final String ANNOTATIONS_PREFIX = RhodesService.INTENT_EXTRA_PREFIX + "annotations.";
-	
+	//JIMMY
+	private static final String CALLBACKS_PREFIX = RhodesService.INTENT_EXTRA_PREFIX + "callbacks.";
+	//ENDJIMMY
 	private static GoogleMapView mc = null;
 	
 	private ServiceConnection mServiceConnection = null;
@@ -172,6 +174,7 @@ public class GoogleMapView extends MapActivity {
 		
 		apiKey = extras.getString(SETTINGS_PREFIX + "api_key");
 		String callback = extras.getString(CALLBACKS_PREFIX + "on_touch_up");
+		Log.e(TAG,"JIMMY CAPTURO CALLBACK: "+callback);
 
 		// Extract settings
 		String map_type = extras.getString(SETTINGS_PREFIX + "map_type");
@@ -452,7 +455,13 @@ public class GoogleMapView extends MapActivity {
 			mHolder.clear();
 			ExtrasHolder intent = mHolder;
 			intent.putExtra(SETTINGS_PREFIX + "api_key", gapiKey);
-			
+
+			Object callbacks = params.get("callbacks");
+			Map<Object, Object> auxhash = (Map<Object, Object>)callbacks;
+			Object touch_up_callback = auxhash.get("on_touch_up");
+			if (touch_up_callback != null && (touch_up_callback instanceof String))
+				intent.putExtra(CALLBACKS_PREFIX + "on_touch_up", (String)touch_up_callback);
+
 			Object settings = params.get("settings");
 			if (settings != null && (settings instanceof Map<?,?>)) {
 				Map<Object, Object> hash = (Map<Object, Object>)settings;
