@@ -6,7 +6,7 @@ import com.rhomobile.rhodes.phonebook.ContactAccessor;
 class RhodesActivityStartupListeners {
 
 	public static final String[] ourRunnableList = { ""
-       ,"com.rhomobile.nfc.Nfc"
+//       ,"com.rhomobile.nfc.Nfc"
 	};
 
 }

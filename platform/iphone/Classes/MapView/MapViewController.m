@@ -26,11 +26,12 @@
 
 #ifdef __IPHONE_3_0
 
+#import "WildcardGestureRecognizer.h"
 #import "MapAnnotation.h"
 #import "MapViewController.h"
 #import "Rhodes.h"
 #import "RhoMainView.h"
-#import "WildcardGestureRecognizer.h"
+
 
 #include "logging/RhoLog.h"
 #include "ruby/ext/rho/rhoruby.h"
