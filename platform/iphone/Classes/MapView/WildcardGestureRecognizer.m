@@ -2,7 +2,6 @@
 //  WildcardGestureRecognizer.m
 //  Created by Raymond Daly on 10/31/10.
 //  Copyright 2010 Floatopian LLC. All rights reserved.
-
 //
 
 #import "Rhodes.h"
