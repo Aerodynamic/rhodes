@@ -46,6 +46,7 @@ import android.os.IBinder;
 import android.view.Display;
 import android.view.ViewGroup.LayoutParams;
 import android.view.MotionEvent;
+import android.view.View;
 import android.widget.RelativeLayout;
 import android.util.Log;
 
@@ -104,6 +105,10 @@ public class GoogleMapView extends MapActivity {
 	
 	private static void reportFail(String name, Exception e) {
 		Logger.E(TAG, "Call of \"" + name + "\" failed: " + e.getMessage());
+	}
+	
+	public com.google.android.maps.MapView getView() {
+		return view;
 	}
 	
 	@Override
