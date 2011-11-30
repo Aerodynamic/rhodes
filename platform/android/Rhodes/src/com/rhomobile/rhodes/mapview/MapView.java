@@ -100,6 +100,14 @@ public class MapView extends BaseActivity implements MapTouch {
 	
 	private static int ourDensity = Bitmap.DENSITY_NONE;//DisplayMetrics.DENSITY_DEFAULT;
 	
+	public int getHeight() {
+		return mSurface.getHeight();
+	}
+	
+	public int getWidth() {
+		return mSurface.getWidth();
+	}
+	
 	private TouchHandler createTouchHandler() {
 		String className;
 		int sdkVersion = Integer.parseInt(Build.VERSION.SDK);

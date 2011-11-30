@@ -70,7 +70,9 @@ public class CalloutOverlay extends ItemizedOverlay<OverlayItem> {
 	public void selectAnnotation(Annotation ann) {
 		mSelectedAnnotation = ann;
 		if (mCallout == null) {
-			mCallout = new Callout(ann.latitude, ann.longitude, ann.title, ann.subtitle, ann.url, mainView);
+			int height = mainView.getView().getHeight();
+			int width = mainView.getView().getWidth();
+			mCallout = new Callout(ann.latitude, ann.longitude, ann.title, ann.subtitle, ann.url, mainView, width, height);
 		}
 		else {
 			mCallout.rebuild(ann.latitude, ann.longitude, ann.title, ann.subtitle, ann.url);

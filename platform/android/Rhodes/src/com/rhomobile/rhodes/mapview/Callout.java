@@ -26,6 +26,8 @@
 
 package com.rhomobile.rhodes.mapview;
 
+import android.util.Log;
+
 import com.rhomobile.rhodes.AndroidR;
 import com.rhomobile.rhodes.RhodesService;
 
@@ -38,8 +40,8 @@ import android.graphics.Rect;
 
 public class Callout {
 	
-	public static final int TITLE_FONT_SIZE = 28;
-	public static final int DETAILS_FONT_SIZE = 18;
+	public static int TITLE_FONT_SIZE; //28
+	public static int DETAILS_FONT_SIZE; //18
 	
 	public static final int TITLE_COLOR = 0xFFFFFFFF;
 	public static final int DETAILS_COLOR = 0xFFFFFFFF;
@@ -59,15 +61,20 @@ public class Callout {
 	public static final int ANCHOR_C1_X = 19;
 	public static final int ANCHOR_C1_Y = 11;
 	
+	private int screenHeight;
+	private int screenWidth;
+	
 
-	public Callout(double latitude, double longitude, String title, String details, String url, Context context) {
+	public Callout(double latitude, double longitude, String title, String details, String url, Context context, int width, int height) {
 		loadResources(context);
+		screenHeight = height;
+		screenWidth = width;
 		rebuild(latitude, longitude, title, details, url);
 	}
 	
-	public static Callout makeCallout(String title, String details, String url) {
-		return new Callout(0,0, title, details, url, RhodesService.getContext());
-	}
+//	public static Callout makeCallout(String title, String details, String url, int width, int height) {
+//		return new Callout(0,0, title, details, url, RhodesService.getContext(), width, height);
+//	}
 	
 	public void rebuild(double latitude, double longitude, String title, String details, String url) {
 		mLatitude = latitude;
@@ -91,6 +98,9 @@ public class Callout {
 		int title_height = 0;
 		// calc Title size (only W)
 		paint.setColor(TITLE_COLOR);
+		Log.d("RHODES", "Screen height = "+screenHeight+" screen width = "+screenWidth);
+		TITLE_FONT_SIZE = (int) screenHeight/30;
+		DETAILS_FONT_SIZE = (int) screenHeight/42;
 		paint.setTextSize(TITLE_FONT_SIZE);
 	    Rect rcLine = new Rect();
 		paint.getTextBounds( mTitle, 0, mTitle.length(), rcLine );
